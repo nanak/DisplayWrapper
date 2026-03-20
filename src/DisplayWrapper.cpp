@@ -103,6 +103,11 @@ bool DisplayWrapper::init(){
 	//lcd.setFont(&fonts::AsciiFont8x16);
 	return true;
 }
+
+lgfx::LGFX_Device* DisplayWrapper::getLGFX() {
+    return &lcd;
+}
+
 void DisplayWrapper::setTextAlignment(OLEDDISPLAY_TEXT_ALIGNMENT textAlignment){}
 
 void DisplayWrapper::setFont(int index){
