@@ -69,7 +69,8 @@ class DisplayWrapper {
 		// sessions (no memory fragmentation). Both Morse Invaders
 		// and Fight the Pileup share the same sprite.
 
-		LGFX_Sprite* enterGameMode(bool leftHanded = false);
+LGFX_Sprite* enterGameMode(bool leftHanded = false);
+		LGFX_Sprite* enterGameModeLandscape(bool leftHanded = false);
 		void pushGameFrame();
 		void exitGameMode();
 		bool isInGameMode() const;
@@ -82,7 +83,9 @@ class DisplayWrapper {
 		bool useTheme;
 		uint16_t fg, bg;
 
-		// Game mode state
-		LGFX_Sprite* _gameSprite = nullptr;
+// Game mode state
+		LGFX_Sprite* _gameSprite = nullptr;             // portrait sprite (Invaders, Pileup)
+		LGFX_Sprite* _gameSpriteLandscape = nullptr;    // landscape sprite (Radio Cave)
 		bool _gameMode = false;
+		bool _gameModeIsLandscape = false;              // which sprite pushGameFrame should use
 };

@@ -244,6 +244,7 @@ else {
 
 LGFX_Sprite* DisplayWrapper::enterGameMode(bool leftHanded) {
     _gameMode = true;
+    _gameModeIsLandscape = false;
 
     // Configure the TFT for game use (portrait orientation)
     lcd.setRotation(leftHanded ? 0 : 2);
@@ -265,18 +266,51 @@ LGFX_Sprite* DisplayWrapper::enterGameMode(bool leftHanded) {
             return nullptr;
         }
     }
-    _gameSprite->fillSprite(TFT_BLACK);
+_gameSprite->fillSprite(TFT_BLACK);
     return _gameSprite;
 }
 
+LGFX_Sprite* DisplayWrapper::enterGameModeLandscape(bool leftHanded) {
+    _gameMode = true;
+    _gameModeIsLandscape = true;
+
+    // Configure the TFT for game use (landscape orientation).
+    // Rotation 3 = native landscape (encoder on the right, USB on the left).
+    // Rotation 1 = landscape rotated 180° (for left-handed use).
+    lcd.setRotation(leftHanded ? 1 : 3);
+    lcd.fillScreen(TFT_BLACK);
+
+    // Allocate the landscape sprite once — reuse across all game sessions
+    if (!_gameSpriteLandscape) {
+        _gameSpriteLandscape = new LGFX_Sprite(&lcd);
+        if (!_gameSpriteLandscape) {
+            _gameMode = false;
+            return nullptr;
+        }
+        _gameSpriteLandscape->setPsram(false);
+        _gameSpriteLandscape->setColorDepth(16);
+        if (!_gameSpriteLandscape->createSprite(lcd.width(), lcd.height())) {
+            delete _gameSpriteLandscape;
+            _gameSpriteLandscape = nullptr;
+            _gameMode = false;
+            return nullptr;
+        }
+    }
+    _gameSpriteLandscape->fillSprite(TFT_BLACK);
+    return _gameSpriteLandscape;
+}
+
 void DisplayWrapper::pushGameFrame() {
-    if (!_gameSprite || !_gameMode) return;
+    if (!_gameMode) return;
+
+    LGFX_Sprite* spr = _gameModeIsLandscape ? _gameSpriteLandscape : _gameSprite;
+    if (!spr) return;
 
     // LovyanGFX startWrite/endWrite manage the SPI bus.
     // startWrite claims the bus (configures SPI pins if bus_shared).
     // endWrite releases it (allows other users of the shared bus).
     lcd.startWrite();
-    _gameSprite->pushSprite(&lcd, 0, 0);
+    spr->pushSprite(&lcd, 0, 0);
     lcd.endWrite();
 }
 
@@ -292,5 +326,5 @@ bool DisplayWrapper::isInGameMode() const {
 }
 
 LGFX_Sprite* DisplayWrapper::getGameSprite() {
-    return _gameSprite;
+    return _gameModeIsLandscape ? _gameSpriteLandscape : _gameSprite;
 }
