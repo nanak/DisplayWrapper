@@ -252,6 +252,17 @@ LGFX_Sprite* DisplayWrapper::enterGameMode(bool leftHanded) {
     _gameMode = true;
     _gameModeIsLandscape = false;
 
+    // The portrait and landscape sprites each occupy ~100 KB of internal
+    // SRAM (setPsram(false)) and cannot coexist on the M32 Pocket. Free
+    // the landscape sprite if a previous Radio Cave session left it
+    // allocated, otherwise the createSprite() below would fail OOM and
+    // return nullptr to the caller.
+    if (_gameSpriteLandscape) {
+        _gameSpriteLandscape->deleteSprite();
+        delete _gameSpriteLandscape;
+        _gameSpriteLandscape = nullptr;
+    }
+
     // Configure the TFT for game use (portrait orientation)
     lcd.setRotation(leftHanded ? 0 : 2);
     lcd.fillScreen(TFT_BLACK);
@@ -279,6 +290,14 @@ _gameSprite->fillSprite(TFT_BLACK);
 LGFX_Sprite* DisplayWrapper::enterGameModeLandscape(bool leftHanded) {
     _gameMode = true;
     _gameModeIsLandscape = true;
+
+    // Free the portrait sprite if a previous Invaders/Pileup session left
+    // it allocated — see the matching comment in enterGameMode().
+    if (_gameSprite) {
+        _gameSprite->deleteSprite();
+        delete _gameSprite;
+        _gameSprite = nullptr;
+    }
 
     // Configure the TFT for game use (landscape orientation).
     // Rotation 3 = native landscape (encoder on the right, USB on the left).
